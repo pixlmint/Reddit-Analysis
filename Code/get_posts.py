@@ -12,7 +12,7 @@ subreddits = []
 global reddit
 
 
-def get_data(redd, subreddit, sub):
+def get_data(redd, subreddit, sub, sub_filter):
     global reddit
     reddit = redd
 
@@ -26,15 +26,14 @@ def get_data(redd, subreddit, sub):
             c.threads = []
             first_run = False
         c.threads.append(a)
-    c.save_posts_to_file()
+    c.save_posts_to_file(sub_filter)
 
 
-def get_posts_of_subreddit_by_id(sub, path=None):
+def get_posts_of_subreddit_by_id(sub, sub_filter, path=None):
     arr = go_in_directory(path + "/" + sub, [])
-    print(arr)
     c = MySubreddit(sub)
     subreddits.append(c)
-    return c.get_array_from_csv_by_id(arr)
+    return c.get_array_from_csv_by_id(arr, sub_filter)
 
 
 def go_in_directory(dir, arr):
@@ -84,20 +83,10 @@ class MySubreddit:
             temp['time_saved'].append(thread.time_saved)
         return pd.DataFrame(temp)
 
-    def save_posts_to_file(self):
+    def save_posts_to_file(self, sub_filter):
         for thread in self.threads:
-            thread.save_post_to_file(self.name)
+            thread.save_post_to_file(self.name, sub_filter)
 
-
-    '''
-        def get_panda_from_csv(self):
-            temp = {'score': [], 'time_saved': []}
-            for thread in self.threads:
-                pan = thread.get_panda_from_csv(self.name)
-                temp['score'].append(pan['score'])
-                temp['time_saved'].append(pan['time_saved'])
-            return pd.DataFrame(temp)
-    '''
     def get_array_from_csv(self):
         temp = {'time_saved': [], 'score': [], 'id': "", 'subreddit': self.name}
         for thread in self.threads:
@@ -115,22 +104,23 @@ class MySubreddit:
                 print(TypeError)
         return temp
 
-    def get_array_from_csv_by_id(self, ids):
+    def get_array_from_csv_by_id(self, ids, sub_filter):
         temp = {'time_saved': [], 'score': [], 'id': [], 'subreddit': self.name}
         for id in ids:
             try:
                 temp2 = temp
-                a = get_panda_from_csv(id, self.name)
+                a = get_panda_from_csv(id, self.name, sub_filter)
+                # if a['created']
                 temp2['score'].append(a['score'])
-                r = a['time_saved']
-                temp2['time_saved'].append(a['created'][0])
-                temp2['time_saved'].append(r)
-                temp2['score'].insert(0, [0])
+                temp2['time_saved'].append(a['time_saved'])
                 temp2['id'].append(a['id'][0])
                 temp = temp2
             except TypeError:
                 print("Type Error with: " + str(id))
         return temp
+
+    def get_posts_younger_than(self, arr):
+        pass
 
 
 class Post:
@@ -141,8 +131,14 @@ class Post:
     comms_num = 0
     created = None
     time_saved = None
+    post_history = []
 
     def __init__(self, title, score, id, url, comms_num, created):
+        if title.__contains__(','):
+            temp = title.split(',')
+            title = ''
+            for slice in temp:
+                title += slice
         self.title = title
         self.score = score
         self.id = id
@@ -163,10 +159,11 @@ class Post:
         return {'url': self.url, 'id': self.id, 'score': self.score, 'title': self.title, 'comms_num': self.comms_num,
                 'created': self.created}
 
-    def save_post_to_file(self, sub):
+    def save_post_to_file(self, sub, sub_filter):
+        self.post_history.append(PostHistoryElement(self.score, self.time_saved))
         if not os.getcwd().split(os.sep)[-1] == str(self.id):
             date = dt.datetime.now().date()
-            change_directory(sub, str(self.id), date=str(date.month) + "." + str(date.day), filter="Hot")
+            change_directory(sub, str(self.id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
         path = str(self.id + '.csv')
         if not os.path.isfile(path):
             self.get_panda().to_csv(path, index=True)
@@ -176,14 +173,14 @@ class Post:
                     try:
                         self.get_panda().to_csv(fd, header=False)
                     except UnicodeEncodeError:
-                        print(os.getcwd())
+                        print('UnicodeEncodeError at: ' + os.getcwd())
             except PermissionError:
                 print("Couldn't read file at " + os.getcwd())
 
-    def get_panda_from_csv(self, sub):
+    def get_panda_from_csv(self, sub, sub_filter):
         date = dt.datetime.now().date()
         if not os.getcwd().split(os.sep)[-1] == self.id:
-            change_directory(sub, str(self.id), date=str(date.month) + "." + str(date.day), filter="Hot")
+            change_directory(sub, str(self.id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
         path = str(self.id + '.csv')
         ret = None
         try:
@@ -192,15 +189,29 @@ class Post:
             print("error")
             return
 
+    def add_history_element(self, score, time_saved):
+        self.post_history.append(PostHistoryElement(score, time_saved))
 
-def get_panda_from_csv(post_id, sub):
+
+class PostHistoryElement:
+    score = 0
+    time_saved = None
+
+    def __init__(self, score, time_saved):
+        self.score = score
+        self.time_saved = time_saved
+
+    def get_element(self):
+        return [self.score, self.time_saved]
+
+
+def get_panda_from_csv(post_id, sub, sub_filter):
     date = dt.datetime.now().date()
     if not os.getcwd().split(os.sep)[-1] == post_id:
-        change_directory(sub, str(post_id), date=str(date.month) + "." + str(date.day), filter="Hot")
+        change_directory(sub, str(post_id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
     path = str(post_id + '.csv')
     ret = None
     try:
-        print(path + ": \n" + str(pd.read_csv(path)['score'].dtype))
         return pd.read_csv(path)
     except UnicodeDecodeError:
         print("error")

@@ -1,32 +1,30 @@
 import os
 import datetime as dt
-import traceback
 
 import plotly.graph_objs as go
 import plotly.io as pio
 
 
-def create_plot(data):
-    for i in range(len(data['time_saved'])):
-        print('score:\n' + str(data['score'][i]) + "\ndate saved:\n" + str(data['time_saved'][i]))
+def create_plot(data, sub_filter):
+    for i in range(len(data['id'])):
         try:
             fig = go.Figure()
             fig.add_scatter(x=data['time_saved'][i],
                             y=data['score'][i],
                             mode='lines')
-            save_image(fig, data['id'][i], data['subreddit'])
-        except ValueError:
-            print("Error while visualising\t" + os.getcwd())
+            save_image(fig, data['id'][i], data['subreddit'], sub_filter)
+        except IndexError:
+            print("Error while visualising\t" + os.getcwd() + '\tIndex out of range\t' + str(len(data['id'])))
 
 
-def save_image(fig, id, sub):
+def save_image(fig, id, sub, sub_filter):
     date = dt.datetime.now().date()
     if not os.getcwd().split(os.sep)[-1] == str(id):
-        change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter="Hot")
+        change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
     try:
         pio.write_image(fig, str(id) + ".png")
     except PermissionError:
-        print('unable to write to fail')
+        print('unable to write to file')
 
 
 def change_directory(sub=None, id=None, date=None, filter=None):

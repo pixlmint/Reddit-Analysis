@@ -8,100 +8,60 @@ from datetime import datetime
 import ftp_writer
 
 
+global keys
+
+
 def get_keys():
     file = open('keys.txt', 'r')
     keys_dict = {file.readline(): file.readline().split()[0][:14],
                  file.readline(): file.readline().split()[0][:27],
                  file.readline(): file.readline().split()[0][:16],
                  file.readline(): file.readline()}
-    global keys
     return keys_dict
 
 
-global keys
 keys = get_keys()
 reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'], user_agent='Analytics',
                      username='Kristophersson', password=keys['password\n'])
 
-subreddits = ['dankmemes']
+subreddits = ['dankmemes', 'memes', 'askreddit', 'trebuchetmemes']
 
 
-def run():
+def get_fresh_posts():
     for sub in subreddits:
-        ps.get_data(reddit, reddit.subreddit(sub).hot(limit=50), sub)
+        ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, 'new')
 
 
-"""
-for i in range(len(subreddits)):
-    ps.subreddits[i].save_posts_to_file()
-    print(ps.subreddits[i].get_panda())
-"""
-
-# visualizer.create_plot(ps.subreddits[0].get_array_from_csv())
+def run(sub_filter):
+    for sub in subreddits:
+        if sub_filter == 'hot':
+            ps.get_data(reddit, reddit.subreddit(sub).hot(limit=20), sub, sub_filter)
+        elif sub_filter == 'new':
+            ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
+            ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
 
 
 def visualize_post(post):
     visualizer.create_plot(ps.subreddits[post].get_array_from_csv())
 
 
-def visualize_all():
-    for sub in ps.subreddits:
+def visualize_all(sub_filter):
+    for sub in subreddits:
         print(sub)
-        visualizer.create_plot(sub.get_array_from_csv())
+        visualize_subreddit(sub, sub_filter)
 
 
-def go_in_directory(dir, arr):
-    os.chdir(dir)
-    dirs = os.listdir(".")
-    for dirc in dirs:
-        if os.path.isdir(dirc):
-            arr = go_in_directory(dirc, arr)
-        elif dirc.endswith('.csv'):
-            arr.append([dirc][0][:6])
-            os.chdir('../')
-            return arr
-        elif dirc.endswith('.png'):
-            pass
-        else:
-            while not os.path.isdir(dirc):
-                os.chdir('../')
-            go_in_directory(dirc, arr)
-    return arr
+def visualize_array(arr):
+    pass
 
 
-def visualize_subreddit(sub):
-    """
-    Pseudo Code:
-        get all posts in (sub) folder
-        get data from those csv files
-    how to get all file id's in a folder:
-        make use of go_in_directory
-    """
-    panda = ps.get_posts_of_subreddit_by_id('askreddit', path='../Data/3.3/Hot')
-    visualizer.create_plot(panda)
-
-
-# visualize_subreddit('askreddit')
-
-
-'''    
-def get_array_from_csv(sub):
-    temp = {'time_saved': [], 'score': [], 'id': "", 'subreddit': sub}
-    for thread in self.threads:
-        pan = thread.get_panda_from_csv(self.name)
-        try:
-            temp['score'].append(pan['score'])
-            temp['score'].append(0)
-            r = pan['time_saved']
-            temp['time_saved'].append([thread.created])
-            temp['time_saved'].append(r)
-            temp['score'].insert(0, [0])
-            temp['id'] = pan['id'][0]
-            print('id: ' + str(pan['id'][0]))
-        except TypeError:
-            print(TypeError)
-    return temp
-'''
+def visualize_subreddit(sub, sub_filter):
+    try:
+        os.chdir("../../../../../Code")
+        panda = ps.get_posts_of_subreddit_by_id(sub, sub_filter, path='../Data/3.4/' + sub_filter)
+        visualizer.create_plot(panda, sub_filter)
+    except FileNotFoundError:
+        print('File doesn\'t exist at \t' + os.getcwd())
 
 
 # visualize_subreddit('dankmemes')
@@ -119,11 +79,14 @@ class MyThread(Thread):
         i = 0
         while not self.stopped.wait(30):
             print("running thread " + str(i))
-            run()
-            if int(self.time.minute) >= self.last_saved + 5:
+            run('hot')
+            get_fresh_posts()
+            if int(self.time.minute) % 10 == 0:
                 print('visualizing')
-                # visualize_all()
+                visualize_all('hot')
                 self.last_saved = int(self.time.minute)
+            elif int(self.time.minute) % 20 == 0:
+                visualize_all('new')
             self.time = datetime.now().time()
             print('done: ' + str(self.time.hour) + ":" + str(self.time.minute))
             i = i + 1
