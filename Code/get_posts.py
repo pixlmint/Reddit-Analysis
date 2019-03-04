@@ -4,32 +4,56 @@ import traceback
 
 import pandas as pd
 
-
-global posts
+global posts, subreddits, reddit
 posts = []
-global subreddits
 subreddits = []
-global reddit
 
 
 def get_data(redd, subreddit, sub, sub_filter):
+    c = None
+    """
+    if this subreddit (MySubreddit instance) isn't in list 'subreddits': create new instance, put in list.
+    else: get instance
+    """
+    for subredd in subreddits:
+        if str(subredd) == sub and subredd.filter == sub_filter:
+            c = subredd
+        else:
+            c = MySubreddit(sub, sub_filter)
+            subreddits.append(c)
+
+    '''safety measure'''
+    if c is None:
+        c = MySubreddit(sub, sub_filter)
+        subreddits.append(c)
     global reddit
     reddit = redd
-
-    c = MySubreddit(sub)
-    subreddits.append(c)
     first_run = True
+
+    '''
+    loop through submissions in subreddit instance
+        if the post isn't in the list found in MySubreddit instance, crete new Post instance
+    add new data into new PostHistoryElement, add to list in Post
+    '''
     for submission in subreddit:
-        a = Post(submission.title, submission.score, submission.id, submission.url, submission.num_comments,
-                 submission.created)
-        if first_run:
-            c.threads = []
-            first_run = False
-        c.threads.append(a)
+        if not c.check_if_post_is_in_list(submission.id):
+            a = Post(submission.title, submission.id, submission.url, submission.created)
+            if first_run:
+                c.threads = []
+                first_run = False
+            c.threads.append(a)
+        else:
+            a = c.get_post_by_id(submission.id)
+        a.post_history.append(PostHistoryElement(submission.score, dt.datetime.now(), submission.num_comments))
+
+    '''Save data to csv file'''
     c.save_posts_to_file(sub_filter)
 
 
 def get_posts_of_subreddit_by_id(sub, sub_filter, path=None):
+    """
+    :rtype: dictionary of thread data
+    """
     arr = go_in_directory(path + "/" + sub, [])
     c = MySubreddit(sub)
     subreddits.append(c)
@@ -58,18 +82,31 @@ def go_in_directory(dir, arr):
 class MySubreddit:
     threads = []
     name = ""
+    filter = ""
 
     def __str__(self):
         return self.name
 
-    def __init__(self, name):
+    def __init__(self, name, filter):
         self.name = name
+        self.filter = filter
 
     def save(self):
         ret = []
         for thread in self.threads:
             ret.append(thread.save())
         return ret
+
+    def check_if_post_is_in_list(self, id):
+        for thread in self.threads:
+            if thread.id == id:
+                return True
+        return False
+
+    def get_post_by_id(self, id):
+        for thread in self.threads:
+            if thread.id == id:
+                return thread
 
     def get_panda(self):
         temp = {'title': [], 'score': [], 'id': [], 'url': [], 'comms_num': [], 'created': [], 'time_saved': []}
@@ -84,6 +121,9 @@ class MySubreddit:
         return pd.DataFrame(temp)
 
     def save_posts_to_file(self, sub_filter):
+        """
+        :param sub_filter: filter used to get subreddit data (hot/new/top...)
+        """
         for thread in self.threads:
             thread.save_post_to_file(self.name, sub_filter)
 
@@ -125,57 +165,46 @@ class MySubreddit:
 
 class Post:
     title = ''
-    score = 0
     id = 0
     url = ''
-    comms_num = 0
     created = None
-    time_saved = None
     post_history = []
 
-    def __init__(self, title, score, id, url, comms_num, created):
+    def __init__(self, title, id, url, created):
         if title.__contains__(','):
             temp = title.split(',')
             title = ''
             for slice in temp:
                 title += slice
         self.title = title
-        self.score = score
         self.id = id
         self.url = url
-        self.comms_num = comms_num
         self.created = dt.datetime.fromtimestamp(created)
-        self.time_saved = dt.datetime.now()
+        # self.time_saved = dt.datetime.now()
 
     def get_dict(self):
-        ret = {'title': self.title, 'score': self.score, 'id': self.id, 'url': self.url, 'comms_num': self.comms_num,
-               'created': self.created, 'time_saved': self.time_saved}
+        # ret = {'title': self.title, 'score': [], 'id': self.id, 'url': self.url, 'comms_num': [],
+        #       'created': self.created, 'time_saved': []}
+        ret = {'score': [], 'comms_num': [], 'time_saved': []}
+        for element in self.post_history:
+            ret['score'].append(element.score)
+            ret['comms_num'].append(element.comms_num)
+            ret['time_saved'].append(element.time_saved)
         return ret
 
     def get_panda(self):
         return pd.DataFrame(self.get_dict(), index=[0])
 
-    def save(self):
-        return {'url': self.url, 'id': self.id, 'score': self.score, 'title': self.title, 'comms_num': self.comms_num,
-                'created': self.created}
-
     def save_post_to_file(self, sub, sub_filter):
-        self.post_history.append(PostHistoryElement(self.score, self.time_saved))
         if not os.getcwd().split(os.sep)[-1] == str(self.id):
             date = dt.datetime.now().date()
             change_directory(sub, str(self.id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
         path = str(self.id + '.csv')
-        if not os.path.isfile(path):
-            self.get_panda().to_csv(path, index=True)
-        else:
-            try:
-                with open(path, 'a') as fd:
-                    try:
-                        self.get_panda().to_csv(fd, header=False)
-                    except UnicodeEncodeError:
-                        print('UnicodeEncodeError at: ' + os.getcwd())
-            except PermissionError:
-                print("Couldn't read file at " + os.getcwd())
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            print("File " + path + " doesn't exist, creating it now.")
+        self.get_panda().to_csv(path, index=True)
 
     def get_panda_from_csv(self, sub, sub_filter):
         date = dt.datetime.now().date()
@@ -189,20 +218,22 @@ class Post:
             print("error")
             return
 
-    def add_history_element(self, score, time_saved):
-        self.post_history.append(PostHistoryElement(score, time_saved))
+    def add_history_element(self, score, time_saved, num_comms):
+        self.post_history.append(PostHistoryElement(score, time_saved, num_comms))
 
 
 class PostHistoryElement:
     score = 0
     time_saved = None
+    comms_num = None
 
-    def __init__(self, score, time_saved):
+    def __init__(self, score, time_saved, num_comms):
         self.score = score
         self.time_saved = time_saved
+        self.comms_num = num_comms
 
     def get_element(self):
-        return [self.score, self.time_saved]
+        return [self.score, self.time_saved, self.num_comms]
 
 
 def get_panda_from_csv(post_id, sub, sub_filter):
