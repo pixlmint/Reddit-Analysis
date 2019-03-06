@@ -10,6 +10,8 @@ import ftp_writer
 
 global keys
 
+subreddits = ['dankmemes', 'memes', 'askreddit', 'trebuchetmemes']
+
 
 def get_keys():
     file = open('keys.txt', 'r')
@@ -23,8 +25,6 @@ def get_keys():
 keys = get_keys()
 reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'], user_agent='Analytics',
                      username='Kristophersson', password=keys['password\n'])
-
-subreddits = ['dankmemes', 'memes', 'askreddit', 'trebuchetmemes']
 
 
 def get_fresh_posts():
@@ -58,7 +58,7 @@ def visualize_array(arr):
 def visualize_subreddit(sub, sub_filter):
     try:
         os.chdir("../../../../../Code")
-        panda = ps.get_posts_of_subreddit_by_id(sub, sub_filter, path='../Data/3.4/' + sub_filter)
+        panda = ps.get_posts_of_subreddit_by_id(sub, sub_filter, path='../Data/3.6/' + sub_filter)
         visualizer.create_plot(panda, sub_filter)
     except FileNotFoundError:
         print('File doesn\'t exist at \t' + os.getcwd())
