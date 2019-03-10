@@ -10,6 +10,8 @@ import ftp_writer
 
 global keys
 
+subreddits = ['dankmemes', 'askreddit']
+
 
 def get_keys():
     file = open('keys.txt', 'r')
@@ -24,12 +26,10 @@ keys = get_keys()
 reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'], user_agent='Analytics',
                      username='Kristophersson', password=keys['password\n'])
 
-subreddits = ['dankmemes', 'memes', 'askreddit', 'trebuchetmemes']
-
 
 def get_fresh_posts():
     for sub in subreddits:
-        ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, 'new')
+        ps.get_data(reddit, reddit.subreddit(sub).new(limit=5), sub, 'new')
 
 
 def run(sub_filter):
@@ -39,9 +39,6 @@ def run(sub_filter):
         elif sub_filter == 'new':
             ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
             ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
-
-
-run('hot')
 
 
 def visualize_post(post):
@@ -60,8 +57,10 @@ def visualize_array(arr):
 
 def visualize_subreddit(sub, sub_filter):
     try:
+        date = datetime.now()
         os.chdir("../../../../../Code")
-        panda = ps.get_posts_of_subreddit_by_id(sub, sub_filter, path='../Data/3.4/' + sub_filter)
+        panda = ps.get_posts_of_subreddit_by_id(sub, sub_filter, path='../Data/' + str(date.month) + "." +
+                                                                      str(date.day) + "/" + sub_filter)
         visualizer.create_plot(panda, sub_filter)
     except FileNotFoundError:
         print('File doesn\'t exist at \t' + os.getcwd())
@@ -84,7 +83,7 @@ class MyThread(Thread):
             print("running thread " + str(i))
             run('hot')
             get_fresh_posts()
-            if int(self.time.minute) % 10 == 0:
+            if int(self.time.minute) % 2 == 0:
                 print('visualizing')
                 visualize_all('hot')
                 self.last_saved = int(self.time.minute)
@@ -104,4 +103,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-# start_thread()
+start_thread()
