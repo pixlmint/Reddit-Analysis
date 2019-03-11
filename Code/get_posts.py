@@ -8,62 +8,71 @@ posts = []
 subreddits = []
 
 
-def get_data(redd, subreddit, sub, sub_filter):
+def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
     """New Posts"""
-    print('Getting data for ' + sub)
+    print('Getting data for ' + subreddit_name)
     c = None
+
+    for subredd in subreddits:
+        c = create_subreddit(subredd, subreddit_name, sub_filter)
+
+    '''safety measure'''
+    if c is None:
+        print('\tc is None, adding first sub now: ' + subreddit_name)
+        c = MySubreddit(subreddit_name, sub_filter)
+        subreddits.append(c)
+    global reddit
+    reddit = reddit_instance
+    '''
+    loop through submissions in subreddit instance
+        if the post isn't in the list found in MySubreddit instance and the post isn't older than 6 hours, crete new Post instance
+    add new data into new PostHistoryElement, add to list in Post
+    '''
+    arr_posts = get_ids_of_posts_in_subreddit(subreddit_name, '../Data/' + str(dt.datetime.now().month) + '.' +
+                                              str(dt.datetime.now().day) + '/hot')
+    print(c.get_posts_younger_than(arr_posts))
+    arr_gotten_posts = []
+    for submission in subreddit_instance:
+        if submission.id not in c.get_posts_younger_than(arr_posts):
+            if not c.check_if_post_is_in_list(post_id=submission.id):
+                print('submission ' + submission.id + " is saved")
+                a = Post(submission.title, submission.id, submission.url, submission.created)
+                c.threads.append(a)
+                a.create_post_history_elements_from_panda(get_panda_from_csv(submission.id, subreddit_name, sub_filter))
+            else:
+                print('\t\tsubmission already in list')
+                a = c.get_post_by_id(submission.id)
+            a.post_history.append(PostHistoryElement(submission.score, dt.datetime.now().strftime('%Y-%m-%d %H-%M-%S'), submission.num_comments))
+            arr_gotten_posts.append(submission.id)
+
+    for submission in c.get_posts_younger_than(arr_posts):
+        try:
+            if submission not in arr_gotten_posts:
+                a = c.get_post_by_id(submission)
+                c.threads.append(a)
+                a.create_post_history_elements_from_panda(get_panda_from_csv(a.id, subreddit_name, sub_filter))
+                tmp_sub = reddit.submission(id=submission)
+                a.post_history.append(PostHistoryElement(tmp_sub.score, dt.datetime.now().strftime('%Y-%m-%d %H-%M-%S'), tmp_sub.num_comments))
+        except AttributeError:
+            print('An Error occured while getting data for %s' % submission)
+    '''Save data to csv file'''
+    c.save_posts_to_file(sub_filter)
+
+
+def create_subreddit(subreddit_instance, name, sub_filter):
     """
     if this subreddit (MySubreddit instance) isn't in list 'subreddits': create new instance, put in list.
     else: get instance
     """
-    print('\tlength of subreddits: ' + str(len(subreddits)))
-    for subredd in subreddits:
-        if str(subredd) == sub and subredd.filter == sub_filter:
-            print('\tSubreddit ' + sub + ' found in list.')
-            c = subredd
-            print('\t\tbreaking')
-            break
-        else:
-            print('\tSubreddit ' + sub + ' not found in list, creating it now')
-            c = MySubreddit(sub, sub_filter)
-            subreddits.append(c)
-            print('\t\tbreaking')
-            break
-
-    '''safety measure'''
-    if c is None:
-        print('\tc is None, adding first sub now: ' + sub)
-        c = MySubreddit(sub, sub_filter)
+    if str(subreddit_instance) == name and subreddit_instance.filter == sub_filter:
+        print('\tSubreddit ' + name + ' found in list.')
+        c = subreddit_instance
+        return c
+    else:
+        print('\tSubreddit ' + name + ' not found in list, creating it now')
+        c = MySubreddit(name, sub_filter)
         subreddits.append(c)
-    global reddit
-    reddit = redd
-
-    '''
-    loop through submissions in subreddit instance
-        if the post isn't in the list found in MySubreddit instance, crete new Post instance
-    add new data into new PostHistoryElement, add to list in Post
-    '''
-    arr_posts = get_ids_of_posts_in_subreddit(sub, '../Data/' + str(dt.datetime.now().month) + '.' + str(dt.datetime.now().day) + '/hot')
-    for submission in subreddit:
-        if submission.id in arr_posts and not c.check_if_post_is_in_list(post_id=submission.id):
-            print('submission ' + submission.id + " is saved")
-            a = Post(submission.title, submission.id, submission.url, submission.created)
-            c.threads.append(a)
-            # print(get_panda_from_csv(submission.id, sub, sub_filter))
-            a.create_post_history_elements_from_panda(get_panda_from_csv(submission.id, sub, sub_filter))
-        elif not c.check_if_post_is_in_list(post_id=submission.id):
-            print('\t\tsubmission ' + submission.id + ' not in list in ' + sub + ', creating it now.')
-            a = Post(submission.title, submission.id, submission.url, submission.created)
-            c.threads.append(a)
-        else:
-            print('\t\tsubmission already in list')
-            a = c.get_post_by_id(submission.id)
-        print('\tcreating new post_history object for post id: ' + a.id)
-        a.post_history.append(PostHistoryElement(submission.score, dt.datetime.now().strftime('%Y-%m-%d %H-%M-%S'), submission.num_comments))
-        print('\t\t\tlength of post history: ' + str(len(a.post_history)))
-
-    '''Save data to csv file'''
-    c.save_posts_to_file(sub_filter)
+        return c
 
 
 def is_loadable(date_created):
@@ -107,11 +116,9 @@ def go_in_directory(dir, arr):
         if 'Code' in os.getcwd().split(os.sep):
             os.chdir('../Data')
         elif 'Data' not in os.getcwd().split(os.sep):
-            print(os.getcwd())
             os.chdir('../../../../')
             go_in_directory(dir, arr)
         else:
-            print(os.getcwd())
             return []
     return arr
 
@@ -172,7 +179,10 @@ class MySubreddit:
         except FileExistsError:
             pass
         for thread in self.threads:
-            thread.save_post_to_file(self.name, sub_filter)
+            try:
+                thread.save_post_to_file(self.name, sub_filter)
+            except AttributeError:
+                pass
 
     def get_array_from_csv(self):
         temp = {'time_saved': [], 'score': [], 'id': "", 'subreddit': self.name}
@@ -206,7 +216,24 @@ class MySubreddit:
         return temp
 
     def get_posts_younger_than(self, arr):
-        pass
+        ret_arr = []
+        for post_id in arr:
+            change_directory(self.name, post_id, str(dt.datetime.now().month) + '.' + str(dt.datetime.now().day), self.filter)
+            try:
+                file = open(post_id + '.txt', 'r')
+                arr_file = file.readline().split(';')
+                file.close()
+                date_posted = arr_file[-1]
+                datetime_object = dt.datetime.strptime(date_posted, '%Y-%m-%d %H:%M:%S')
+                compare_date = dt.datetime.now() - dt.timedelta(hours=6)
+                if datetime_object >= compare_date:
+                    print('post %s not too old' % post_id)
+                    ret_arr.append(post_id)
+            except FileNotFoundError:
+                print('file %s doesn\'t exist.' % post_id)
+            except ValueError:
+                print('Couldn\'t get date from post id %s' % post_id)
+        return ret_arr
 
 
 class Post:
@@ -230,7 +257,6 @@ class Post:
             ret['score'].append(element.score)
             ret['comms_num'].append(element.comms_num)
             ret['time_saved'].append(element.time_saved)
-        print(ret)
         return ret
 
     def get_panda(self):
@@ -251,6 +277,7 @@ class Post:
             self.get_panda().to_csv(path, index=True)
         except PermissionError:
             print("Can't access file at " + path)
+        self.create_metadata_file()
 
     def get_panda_from_csv(self, sub, sub_filter):
         date = dt.datetime.now().date()
@@ -268,13 +295,22 @@ class Post:
         self.post_history.append(PostHistoryElement(score, time_saved, num_comms))
 
     def create_metadata_file(self):
-        """TODO create metadata file. html or txt, probably txt due to readability"""
-        pass
+        """create txt file with post info if it doesn't yet exist."""
+        try:
+            file = open(self.id + '.txt', 'r')
+        except FileNotFoundError:
+            print('File not found, creating it now')
+            file = open(self.id + '.txt', 'w+')
+            file.write(self.id + ';' + self.url + ';' + self.title + ';' + str(self.created))
+            file.close()
 
     def create_post_history_elements_from_panda(self, panda):
         print(panda)
-        for line in range(len(panda['time_saved'])):
-            self.post_history.append(PostHistoryElement(panda['score'][line], panda['time_saved'][line], panda['comms_num'][line]))
+        try:
+            for line in range(len(panda['time_saved'])):
+                self.post_history.append(PostHistoryElement(panda['score'][line], panda['time_saved'][line], panda['comms_num'][line]))
+        except TypeError:
+            print('NoneType error')
         print('all post history elements created')
 
 
@@ -307,6 +343,8 @@ def get_panda_from_csv(post_id, sub, sub_filter):
     except UnicodeDecodeError:
         print("error")
         return
+    except FileNotFoundError:
+        print('file %s.csv not found' % post_id)
 
 
 def change_directory(sub=None, id=None, date=None, filter=None):
