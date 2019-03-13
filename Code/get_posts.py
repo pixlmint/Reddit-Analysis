@@ -35,7 +35,7 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
     for submission in subreddit_instance:
         if submission.id not in c.get_posts_younger_than(arr_posts):
             if not c.check_if_post_is_in_list(post_id=submission.id):
-                print('submission ' + submission.id + " is saved")
+                print('submission ' + submission.id + " is saved, not yet in list")
                 a = Post(submission.title, submission.id, submission.url, submission.created)
                 c.threads.append(a)
                 a.create_post_history_elements_from_panda(get_panda_from_csv(submission.id, subreddit_name, sub_filter))
@@ -49,6 +49,7 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
         try:
             if submission not in arr_gotten_posts:
                 a = c.get_post_by_id(submission)
+                a = get
                 c.threads.append(a)
                 a.create_post_history_elements_from_panda(get_panda_from_csv(a.id, subreddit_name, sub_filter))
                 tmp_sub = reddit.submission(id=submission)
@@ -87,8 +88,16 @@ def get_posts_of_subreddit_by_id(sub, sub_filter, path=None):
     """
     arr = go_in_directory(path + "/" + sub, [])
     c = MySubreddit(sub, sub_filter)
-    subreddits.append(c)
+    # subreddits.append(c)
     return c.get_array_from_csv_by_id(arr, sub_filter)
+
+
+def get_post_of_subreddit(sub=None, sub_filter=None, path=None, post_id=None):
+    panda = get_posts_of_subreddit_by_id(sub, sub_filter, path)
+    ret = None
+    for i in range(len(panda['id'])):
+        if panda['id'][i] is post_id:
+            ret = Post()
 
 
 def get_ids_of_posts_in_subreddit(sub, path):
@@ -180,6 +189,7 @@ class MySubreddit:
             pass
         for thread in self.threads:
             try:
+                print('Now trying to save %s' % thread.id)
                 thread.save_post_to_file(self.name, sub_filter)
             except AttributeError:
                 pass

@@ -41,9 +41,6 @@ def run(sub_filter):
             ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
 
 
-run('hot')
-
-
 def visualize_post(post):
     visualizer.create_plot(ps.subreddits[post].get_array_from_csv())
 
@@ -106,4 +103,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-# start_thread()
+start_thread()
