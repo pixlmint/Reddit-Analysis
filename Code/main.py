@@ -2,6 +2,8 @@ import os
 from threading import Thread, Event
 
 import praw
+
+import database_connection
 import get_posts as ps
 import visualizer
 from datetime import datetime
@@ -34,11 +36,11 @@ def get_fresh_posts():
 
 def run(sub_filter):
     for sub in subreddits:
-        if sub_filter == 'hot':
-            ps.get_data(reddit, reddit.subreddit(sub).hot(limit=5), sub, sub_filter)
-        elif sub_filter == 'new':
-            ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
-            ps.get_data(reddit, reddit.subreddit(sub).new(limit=20), sub, sub_filter)
+        # database_connection.write_posthistory_to_database(ps.get_data(reddit, reddit.subreddit(sub).hot(limit=5), sub, 'new'))
+        ps.get_data(reddit, reddit.subreddit(sub).hot(limit=5), sub, 'new')
+
+
+run('new')
 
 
 def visualize_post(post):
@@ -103,4 +105,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-start_thread()
+# start_thread()
