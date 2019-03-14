@@ -29,19 +29,16 @@ ftp-password
 * Currently, it will first start the thread then download the 20 newest posts of the subreddits in the list at the very top.
 
 ### Configurations:
+
+#### SQL
+This version of the program needs the connection to a mySql Database which runs on the user's machine (localhost)
+The name of the database is 'reddit_analysis', password is nothing.
+
 #### Subreddits:
 If you want data to different subreddits, just insert it into the array in <code>main.py</code>
 
 #### Filter:
-Reddit has a couple of filters for how the posts are sorted:
-<pre>
-* Hot
-* Top
-* New</pre>
-
-By default, it will get posts of new and hot with a limit of 20 (for better performance)
-
-To change that, go in <code>main.py MyThread.run</code> and change string within function call <code>run()</code>
+(depracated -> it now gets newest posts by default and updates them continually)
 
 #### FTP:
 Currently it points at my server, hosted on bplaced. To change this, go into <code>ftp_writer.py</code>

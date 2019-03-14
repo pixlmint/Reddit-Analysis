@@ -42,13 +42,9 @@ def visualize_post(post=None, id_post=None):
         visualizer.create_plot(ps.load_post_history_element_from_db(id_post=id_post), 'new')
 
 
-visualize_post(id_post='b0ztaw')
-
-
-def visualize_all(sub_filter):
-    for sub in subreddits:
-        print(sub)
-        visualize_subreddit(sub, sub_filter)
+def visualize_all():
+    for post in ps.posts:
+        visualize_post(post=post)
 
 
 def visualize_array(arr):
@@ -81,10 +77,10 @@ class MyThread(Thread):
             run()
             if int(self.time.minute) % 2 == 0:
                 print('visualizing')
-                # visualize_all('hot')
+                visualize_all()
                 self.last_saved = int(self.time.minute)
             elif int(self.time.minute) % 20 == 0:
-                visualize_all('new')
+                visualize_all()
             self.time = datetime.now().time()
             print('done: ' + str(self.time.hour) + ":" + str(self.time.minute))
             i = i + 1
@@ -99,4 +95,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-# start_thread()
+start_thread()
