@@ -81,8 +81,8 @@ def write_post_to_db(post):
 
 
 def write_subreddit_to_db(subreddit_name):
-    query = "INSERT INTO `subreddit` (`name`) VALUES ('%s')"
-    mycursor.execute(query, subreddit_name)
+    query = "INSERT INTO `subreddit` (`name`) VALUES (%s)"
+    mycursor.execute(query, (subreddit_name, ))
     mydb.commit()
 
 

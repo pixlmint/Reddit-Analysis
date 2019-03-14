@@ -9,24 +9,28 @@ subreddits = []
 
 
 def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
-    """if subreddit_name not in subreddits:
+    if subreddit_name not in subreddits:
         if not db.subreddit_in_db(subreddit_name):
             db.write_subreddit_to_db(subreddit_name)
-        subreddits.append(subreddit_name)"""
+        subreddits.append(subreddit_name)
     for submission in subreddit_instance:
-        if not db.post_in_db(submission.id):
-            print('writing post %s to db' % submission.id)
-            t = dt.datetime.utcfromtimestamp(submission.created)
-            post = {'title': submission.title,
-                    'url': submission.url,
-                    'score': submission.score,
-                    'id_post': submission.id,
-                    'created': t,
-                    'id_subreddit': db.get_id_of_subreddit(subreddit_name)
-                    }
-            db.write_post_to_db(post)
+        if submission.id not in posts:
+            if not db.post_in_db(submission.id):
+                print('writing post %s to db' % submission.id)
+                t = dt.datetime.utcfromtimestamp(submission.created)
+                post = {'title': submission.title,
+                        'url': submission.url,
+                        'score': submission.score,
+                        'id_post': submission.id,
+                        'created': t,
+                        'id_subreddit': db.get_id_of_subreddit(subreddit_name)
+                        }
+                db.write_post_to_db(post)
+                posts.append(submission.id)
+            else:
+                print('post %s already in db' % submission.id)
         else:
-            print('post %s already in db' % submission.id)
+            posts.append(submission.id)
         posthistoryelement = {'saved': dt.datetime.now(),
                               'score': submission.score,
                               'num_comments': submission.num_comments,
@@ -82,41 +86,6 @@ class MySubreddit:
             temp['created'].append(thread.created)
             temp['time_saved'].append(thread.time_saved)
         return pd.DataFrame(temp)
-
-    def get_array_from_csv_by_id(self, ids, sub_filter):
-        temp = {'time_saved': [], 'score': [], 'id': [], 'subreddit': self.name}
-        for id in ids:
-            try:
-                temp2 = temp
-                a = get_panda_from_csv(id, self.name, sub_filter)
-                temp2['score'].append(a['score'])
-                temp2['time_saved'].append(a['time_saved'])
-                temp2['id'].append(id)
-                temp = temp2
-            except TypeError:
-                print("Type Error with: " + str(id))
-        return temp
-
-    def get_posts_younger_than(self, arr):
-        ret_arr = []
-        for post_id in arr:
-            change_directory(self.name, post_id, str(dt.datetime.now().month) + '.' + str(dt.datetime.now().day),
-                             self.filter)
-            try:
-                file = open(post_id + '.txt', 'r')
-                arr_file = file.readline().split(';')
-                file.close()
-                date_posted = arr_file[-1]
-                datetime_object = dt.datetime.strptime(date_posted, '%Y-%m-%d %H:%M:%S')
-                compare_date = dt.datetime.now() - dt.timedelta(hours=6)
-                if datetime_object >= compare_date:
-                    print('post %s not too old' % post_id)
-                    ret_arr.append(post_id)
-            except FileNotFoundError:
-                print('file %s doesn\'t exist.' % post_id)
-            except ValueError:
-                print('Couldn\'t get date from post id %s' % post_id)
-        return ret_arr
 
 
 class Post:

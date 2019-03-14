@@ -29,18 +29,9 @@ reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'
                      username='Kristophersson', password=keys['password\n'])
 
 
-def get_fresh_posts():
-    for sub in subreddits:
-        ps.get_data(reddit, reddit.subreddit(sub).new(limit=5), sub, 'new')
-
-
 def run(sub_filter):
     for sub in subreddits:
-        # database_connection.write_posthistory_to_database(ps.get_data(reddit, reddit.subreddit(sub).hot(limit=5), sub, 'new'))
-        ps.get_data(reddit, reddit.subreddit(sub).hot(limit=5), sub, 'new')
-
-
-run('new')
+        ps.get_data(reddit, reddit.subreddit(sub).new(limit=10), sub, 'new')
 
 
 def visualize_post(post):
@@ -84,10 +75,9 @@ class MyThread(Thread):
         while not self.stopped.wait(30):
             print("running thread " + str(i))
             run('hot')
-            get_fresh_posts()
             if int(self.time.minute) % 2 == 0:
                 print('visualizing')
-                visualize_all('hot')
+                # visualize_all('hot')
                 self.last_saved = int(self.time.minute)
             elif int(self.time.minute) % 20 == 0:
                 visualize_all('new')
@@ -105,4 +95,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-# start_thread()
+start_thread()
