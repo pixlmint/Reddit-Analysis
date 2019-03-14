@@ -73,10 +73,9 @@ def write_posthistory_to_database(array):
 
 
 def write_post_to_db(post):
-    print(post['created'])
     query = "INSERT INTO `post` (`id_post`, `url`, `date_posted`, `id_subreddit`, `title`) " \
-            "VALUES ('%s', '%s', '%s', '%s', '%s')"
-    data = (post['id_post'], post['url'], post['created'], post['id_subreddit'], post['title'])
+            "VALUES (%s, %s, %s, %s, %s)"
+    data = (post['id_post'], post['url'], post['created'], post['id_subreddit'][0], post['title'])
     mycursor.execute(query, data)
     mydb.commit()
 
@@ -84,6 +83,14 @@ def write_post_to_db(post):
 def write_subreddit_to_db(subreddit_name):
     query = "INSERT INTO `subreddit` (`name`) VALUES ('%s')"
     mycursor.execute(query, subreddit_name)
+    mydb.commit()
+
+
+def write_posthistoryelement_to_db(posthistoryelement):
+    query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`, `id_post`) " \
+            "VALUES (%s, %s, %s, %s);"
+    data = (posthistoryelement['saved'], posthistoryelement['score'], posthistoryelement['num_comments'], posthistoryelement['id_post'])
+    mycursor.execute(query, data)
     mydb.commit()
 
 
@@ -133,7 +140,7 @@ def get_id_of_subreddit(subreddit_name):
     mycursor.execute(query)
     for x in mycursor:
         return x
-    return False
+    return (1, )
 
 
 create_panda('post')

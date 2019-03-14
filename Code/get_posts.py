@@ -15,14 +15,23 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
         subreddits.append(subreddit_name)"""
     for submission in subreddit_instance:
         if not db.post_in_db(submission.id):
+            print('writing post %s to db' % submission.id)
+            t = dt.datetime.utcfromtimestamp(submission.created)
             post = {'title': submission.title,
                     'url': submission.url,
                     'score': submission.score,
                     'id_post': submission.id,
-                    'created': submission.created,
+                    'created': t,
                     'id_subreddit': db.get_id_of_subreddit(subreddit_name)
                     }
             db.write_post_to_db(post)
+        else:
+            print('post %s already in db' % submission.id)
+        posthistoryelement = {'saved': dt.datetime.now(),
+                              'score': submission.score,
+                              'num_comments': submission.num_comments,
+                              'id_post': submission.id}
+        db.write_posthistoryelement_to_db(posthistoryelement)
 
 
 def get_posts_to_be_kept_up_to_date():
