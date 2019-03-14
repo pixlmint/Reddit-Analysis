@@ -29,22 +29,6 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
             if post_id is post.id_post:
                 print('now creating post history element for post %s' % post.id_post)
                 create_new_post_history_element(post)
-    '''for submission in subreddit_instance:
-        if submission.id not in posts:
-            if not db.post_in_db(submission.id):
-                t = dt.datetime.utcfromtimestamp(submission.created)
-                post = Post(submission.title, submission.id, submission.url, t, 1)
-                db.write_post_to_db(post.get_dict())
-                posts.append(post)
-            else:
-                print('post %s already in db' % submission.id)
-        else:
-            posts.append(submission.id)
-        posthistoryelement = {'saved': dt.datetime.now(),
-                              'score': submission.score,
-                              'num_comments': submission.num_comments,
-                              'id_post': submission.id}
-        db.write_posthistoryelement_to_db(posthistoryelement)'''
 
 
 def get_posts_to_be_kept_up_to_date(subreddit_instance):
@@ -85,10 +69,24 @@ def create_new_post_history_element(post):
     db.write_posthistoryelement_to_db(element.get_dict())
 
 
-def is_loadable(date_created):
-    now = dt.datetime.now()
-    ret = date_created + dt.timedelta(hours=6) - dt.timedelta(hours=float(now.hour), minutes=float(now.minute))
-    print('ret: ' + str(ret))
+def load_post_from_db(id_post):
+    if db.post_in_db(id_post):
+        post = db.get_post(id_post)
+        post_obj = Post(post['title'], id_post, post['url'], post['created'], post['id_subreddit'])
+        posts.append(post_obj)
+        return post_obj
+
+
+def load_post_history_element_from_db(id_post=None, post=None):
+    post = post
+    if id_post:
+        post = load_post_from_db(id_post)
+    elements = db.get_posthistoryelements(post.id_post)
+    for i in range(len(elements['score'])):
+        post.add_history_element(elements['score'][i], elements['date_saved'][i], elements['num_comms'][i])
+    panda = post.get_panda()
+    print(panda)
+    return panda
 
 
 class Post:
@@ -113,10 +111,17 @@ class Post:
         return post
 
     def get_panda(self):
-        return pd.DataFrame(self.get_dict())
+        pan = {'score': [], 'time_saved': [], 'id': self.id_post, 'subreddit': db.get_name_of_subreddit(self.id_subreddit)}
+        for element in self.post_history:
+            pan['score'].append(element.score)
+            d = element.time_saved.strftime("%d.%m.%Y %H:%M:%S")
+            pan['time_saved'].append(d)
+        panda = pd.DataFrame(pan)
+        print(panda)
+        return panda
 
     def add_history_element(self, score, time_saved, num_comms):
-        self.post_history.append(PostHistoryElement(score, time_saved, num_comms))
+        self.post_history.append(PostHistoryElement(score, time_saved, num_comms, self.id_post))
 
     def check_growth(self):
         growth = 0
@@ -126,10 +131,6 @@ class Post:
 
 
 class PostHistoryElement:
-    score = 0
-    time_saved = None
-    comms_num = None
-
     def __str__(self):
         return 'score: ' + str(self.score) + '\tNumber of comments: ' + str(self.comms_num) + \
                '\ttime saved: ' + str(self.time_saved)

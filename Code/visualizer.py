@@ -6,15 +6,14 @@ import plotly.io as pio
 
 
 def create_plot(data, sub_filter):
-    for i in range(len(data['id'])):
-        try:
-            fig = go.Figure()
-            fig.add_scatter(x=data['time_saved'][i],
-                            y=data['score'][i],
-                            mode='lines')
-            save_image(fig, data['id'][i], data['subreddit'], sub_filter)
-        except IndexError:
-            print("Error while visualising\t" + os.getcwd() + '\tIndex out of range\t' + str(len(data['id'])))
+    try:
+        fig = go.Figure()
+        fig.add_scatter(x=data['time_saved'],
+                        y=data['score'],
+                        mode='lines')
+        save_image(fig, data['id'][0], data['subreddit'][0], sub_filter)
+    except IndexError:
+        print("Error while visualising\t" + os.getcwd() + '\tIndex out of range\t' + str(len(data['id'])))
 
 
 def save_image(fig, id, sub, sub_filter):

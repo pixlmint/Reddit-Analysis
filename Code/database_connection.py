@@ -61,14 +61,15 @@ def write_post_to_db(post):
 
 def write_subreddit_to_db(subreddit_name):
     query = "INSERT INTO `subreddit` (`name`) VALUES (%s)"
-    mycursor.execute(query, (subreddit_name, ))
+    mycursor.execute(query, (subreddit_name,))
     mydb.commit()
 
 
 def write_posthistoryelement_to_db(posthistoryelement):
     query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`, `id_post`) " \
             "VALUES (%s, %s, %s, %s);"
-    data = (posthistoryelement['saved'], posthistoryelement['score'], posthistoryelement['num_comments'], posthistoryelement['id_post'])
+    data = (posthistoryelement['saved'], posthistoryelement['score'], posthistoryelement['num_comments'],
+            posthistoryelement['id_post'])
     mycursor.execute(query, data)
     mydb.commit()
 
@@ -106,7 +107,7 @@ def get_posts_younger_than(amount_hours):
 
 def get_posthistoryelements(id_post):
     query = "Select * FROM posthistoryelement WHERE id_post = %s"
-    mycursor.execute(query, (id_post[0], ))
+    mycursor.execute(query, (id_post, ))
     ret = {'date_saved': [], 'score': [], 'num_comms': []}
     for x in mycursor:
         ret['date_saved'].append(x[1])
@@ -115,12 +116,33 @@ def get_posthistoryelements(id_post):
     return ret
 
 
+def get_post(id_post):
+    query = "Select * FROM post WHERE id_post = %s"
+    mycursor.execute(query, (id_post,))
+    for x in mycursor:
+        post = {'title': x[5],
+                'url': x[2],
+                'id_post': x[1],
+                'created': x[3],
+                'id_subreddit': x[4]
+                }
+        return post
+
+
 def get_id_of_subreddit(subreddit_name):
     query = "SELECT id FROM subreddit WHERE name = '%s'" % subreddit_name
     mycursor.execute(query)
     for x in mycursor:
         return x
-    return (1, )
+    return (1,)
+
+
+def get_name_of_subreddit(subreddit_id):
+    query = "SELECT name FROM subreddit WHERE id = '%s'" % subreddit_id
+    mycursor.execute(query)
+    for x in mycursor:
+        print(type(x[0]))
+        return x[0]
 
 
 create_panda('post')

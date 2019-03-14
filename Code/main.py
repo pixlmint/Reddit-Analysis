@@ -34,8 +34,15 @@ def run():
         ps.get_data(reddit, reddit.subreddit(sub).new(limit=10), sub, 'new')
 
 
-def visualize_post(post):
-    visualizer.create_plot(ps.subreddits[post].get_array_from_csv())
+def visualize_post(post=None, id_post=None):
+    if post:
+        visualizer.create_plot(post.get_panda(), 'new')
+    elif id_post:
+        ps.load_post_history_element_from_db(id_post=id_post)
+        visualizer.create_plot(ps.load_post_history_element_from_db(id_post=id_post), 'new')
+
+
+visualize_post(id_post='b0ztaw')
 
 
 def visualize_all(sub_filter):
@@ -57,9 +64,6 @@ def visualize_subreddit(sub, sub_filter):
         visualizer.create_plot(panda, sub_filter)
     except FileNotFoundError:
         print('File doesn\'t exist at \t' + os.getcwd())
-
-
-# visualize_subreddit('dankmemes')
 
 
 class MyThread(Thread):
@@ -95,4 +99,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-start_thread()
+# start_thread()
