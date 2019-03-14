@@ -29,7 +29,7 @@ reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'
                      username='Kristophersson', password=keys['password\n'])
 
 
-def run(sub_filter):
+def run():
     for sub in subreddits:
         ps.get_data(reddit, reddit.subreddit(sub).new(limit=10), sub, 'new')
 
@@ -74,7 +74,7 @@ class MyThread(Thread):
         i = 0
         while not self.stopped.wait(30):
             print("running thread " + str(i))
-            run('hot')
+            run()
             if int(self.time.minute) % 2 == 0:
                 print('visualizing')
                 # visualize_all('hot')
