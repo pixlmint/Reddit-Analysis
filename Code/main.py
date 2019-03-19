@@ -10,8 +10,6 @@ from datetime import datetime
 import ftp_writer
 
 
-global keys
-
 subreddits = ['dankmemes', 'askreddit']
 
 
@@ -49,6 +47,19 @@ def visualize_all():
 
 def visualize_array(arr):
     pass
+
+
+def visualize_todays_posts():
+    ps.posts = []
+    arr_pandas = []
+    for post_id in db.get_todays_posts():
+        ps.load_post_history_element_from_db(id_post=post_id)
+        post = ps.load_post_from_db(post_id)
+        arr_pandas.append(post.get_panda())
+    visualizer.visualize_multiple_posts(arr_pandas)
+
+
+visualize_todays_posts()
 
 
 def visualize_subreddit(sub, sub_filter):
@@ -95,4 +106,4 @@ def start_thread():
 # ftp_writer.write(keys['ftp-password\n'])
 
 
-start_thread()
+# start_thread()

@@ -68,6 +68,9 @@ def create_new_post_history_element(post):
 
 
 def load_post_from_db(id_post):
+    for post in posts:
+        if post.id_post is id_post:
+            return post
     if db.post_in_db(id_post):
         post = db.get_post(id_post)
         post_obj = Post(post['title'], id_post, post['url'], post['created'], post['id_subreddit'])
@@ -83,7 +86,6 @@ def load_post_history_element_from_db(id_post=None, post=None):
     for i in range(len(elements['score'])):
         post.add_history_element(elements['score'][i], elements['date_saved'][i], elements['num_comms'][i])
     panda = post.get_panda()
-    print(panda)
     return panda
 
 
@@ -115,7 +117,6 @@ class Post:
             d = element.time_saved.strftime("%d.%m.%Y %H:%M:%S")
             pan['time_saved'].append(d)
         panda = pd.DataFrame(pan)
-        print(panda)
         return panda
 
     def add_history_element(self, score, time_saved, num_comms):

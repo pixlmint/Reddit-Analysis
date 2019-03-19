@@ -2,10 +2,9 @@ import os
 import datetime as dt
 import sys
 
-import matplotlib
-
 import plotly.graph_objs as go
 import plotly.io as pio
+import plotly.plotly as py
 import database_connection as db
 
 
@@ -20,11 +19,25 @@ def create_plot(data, sub_filter):
         print("Error while visualising\t" + os.getcwd() + '\tIndex out of range\t' + str(len(data['id'])))
 
 
+def visualize_multiple_posts(data):
+    fig = []
+    for dataset in data:
+        fig.append(
+            go.Scatter(
+                x=dataset['time_saved'],
+                y=dataset['score'],
+                name=str(dataset['id'])
+            )
+        )
+    # save_image(fig, data['id'][0], data['subreddit'][0], '')
+    url = py.plot(fig, filename='test')
+    print(url)
+
+
 def save_image(fig, id, sub, sub_filter):
     date = dt.datetime.now().date()
     if not os.getcwd().split(os.sep)[-1] == str(id):
         change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
-        save_to_db(id)
     try:
         pio.write_image(fig, str(id) + ".png")
     except PermissionError:

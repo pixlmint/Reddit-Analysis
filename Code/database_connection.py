@@ -1,5 +1,6 @@
 import mysql.connector
 import pandas as pd
+import datetime as dt
 
 mydb = mysql.connector.connect(
     host="127.0.0.1",
@@ -118,9 +119,19 @@ def get_posts_younger_than(amount_hours):
     return ret
 
 
+def get_todays_posts():
+    query = "Select id_post From post Where DAY(`date_posted`)=%s" % dt.datetime.now().strftime('%d')
+    data = (dt.datetime.now().strftime('%d'), )
+    mycursor.execute(query)
+    ret = []
+    for x in mycursor:
+        ret.append(x[0])
+    return ret
+
+
 def get_posthistoryelements(id_post):
-    query = "Select * FROM posthistoryelement WHERE id_post = %s"
-    mycursor.execute(query, (id_post, ))
+    query = "Select * FROM posthistoryelement WHERE id_post = '%s'" % id_post
+    mycursor.execute(query)
     ret = {'date_saved': [], 'score': [], 'num_comms': []}
     for x in mycursor:
         ret['date_saved'].append(x[1])
