@@ -18,16 +18,13 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
             db.write_subreddit_to_db(subreddit_name)
         subreddits.append(subreddit_name)
     for post_id in get_posts_to_be_kept_up_to_date(subreddit_instance):
-        print('loading %s' % post_id)
         for post in posts:
             if post_id is post.id_post:
-                print('\tpost %s already already existing' % post.id_post)
                 break
         else:
             create_new_post(post_id)
         for post in posts:
             if post_id is post.id_post:
-                print('now creating post history element for post %s' % post.id_post)
                 create_new_post_history_element(post)
 
 
@@ -60,6 +57,7 @@ def create_new_post(id_post):
     posts.append(post)
     if not db.post_in_db(id_post):
         db.write_post_to_db(post.get_dict())
+    return post
 
 
 def create_new_post_history_element(post):

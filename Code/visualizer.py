@@ -1,8 +1,12 @@
 import os
 import datetime as dt
+import sys
+
+import matplotlib
 
 import plotly.graph_objs as go
 import plotly.io as pio
+import database_connection as db
 
 
 def create_plot(data, sub_filter):
@@ -20,10 +24,27 @@ def save_image(fig, id, sub, sub_filter):
     date = dt.datetime.now().date()
     if not os.getcwd().split(os.sep)[-1] == str(id):
         change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
+        save_to_db(id)
     try:
         pio.write_image(fig, str(id) + ".png")
     except PermissionError:
         print('unable to write to file')
+
+
+def convert_to_binarydata(filename):
+    with open(filename, 'rb') as file:
+        binary_data = file.read()
+    print(sys.getsizeof(binary_data))
+    return binary_data
+
+
+def save_to_db(id):
+    print('trying to write image to db')
+    try:
+        # db.write_graph(id, convert_to_binarydata(id + '.png'))
+        print('done writing image to db')
+    except Exception:
+        print(Exception.with_traceback())
 
 
 def change_directory(sub=None, id=None, date=None, filter=None):

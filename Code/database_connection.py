@@ -4,6 +4,7 @@ import pandas as pd
 mydb = mysql.connector.connect(
     host="127.0.0.1",
     user="root",
+    password='nbuser',
     database='reddit_analysis'
 )
 columns_dict = {'post_columns': [], 'subreddit_columns': [],
@@ -72,6 +73,18 @@ def write_posthistoryelement_to_db(posthistoryelement):
             posthistoryelement['id_post'])
     mycursor.execute(query, data)
     mydb.commit()
+
+
+def write_graph(id_post, graph):
+    query = "UPDATE `post` SET `graph`='%s' WHERE `id_post`='%s'"
+    graph = ''.join(str(graph).split("'"))
+    data = (graph, id_post)
+    try:
+        mycursor.execute(query, data)
+        mydb.commit()
+    except mysql.connector.Error as error:
+        mydb.rollback()
+        print("Failed inserting BLOB data into MySQL table {}".format(error))
 
 
 def post_in_db(post_id):

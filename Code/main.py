@@ -3,7 +3,7 @@ from threading import Thread, Event
 
 import praw
 
-import database_connection
+import database_connection as db
 import get_posts as ps
 import visualizer
 from datetime import datetime
