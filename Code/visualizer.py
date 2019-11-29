@@ -4,8 +4,7 @@ import sys
 
 import plotly.graph_objs as go
 import plotly.io as pio
-import plotly.plotly as py
-import database_connection as db
+import chart_studio.plotly as py
 
 
 def create_plot(data, sub_filter):
@@ -31,7 +30,6 @@ def visualize_multiple_posts(data):
         )
     # save_image(fig, data['id'][0], data['subreddit'][0], '')
     url = py.plot(fig, filename='test')
-    print(url)
 
 
 def save_image(fig, id, sub, sub_filter):
@@ -47,7 +45,6 @@ def save_image(fig, id, sub, sub_filter):
 def convert_to_binarydata(filename):
     with open(filename, 'rb') as file:
         binary_data = file.read()
-    print(sys.getsizeof(binary_data))
     return binary_data
 
 
@@ -57,7 +54,7 @@ def save_to_db(id):
         # db.write_graph(id, convert_to_binarydata(id + '.png'))
         print('done writing image to db')
     except Exception:
-        print(Exception.with_traceback())
+        None
 
 
 def change_directory(sub=None, id=None, date=None, filter=None):

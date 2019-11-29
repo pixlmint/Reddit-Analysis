@@ -1,8 +1,22 @@
 # Reddit-Analysis
 A program to save reddit data to csv files for analytics
 
+## Installation
+- Clone/ Download Repository
+- Make sure you have Python3^ installed, either globally or in a virtual environment
+
+## Setup
+### 1.  Make sure you have those plugins installed
+You can install them by running <pre>pip install {plugin name}</pre>
+- mysql-connector-python
+- pandas
+- plotly
+- praw
+- numpy
+- psutil
+
+
 ### How to use:
-1. Clone/ Download Repository
 2. Create folder "Data" in root directory
 <pre>
 -Reddit-Analysis
@@ -12,7 +26,7 @@ A program to save reddit data to csv files for analytics
 ---generated sub folders
 </pre>
 
-3. In "Code" folder create file "keys.txt", insert:
+3. In "Code" folder rename file file "keys.default.txt", insert your account data:
 <pre>
 personal
 [Reddit API personal token]
@@ -34,6 +48,8 @@ ftp-password
 This version of the program needs the connection to a mySql Database which runs on the user's machine (localhost)
 The name of the database is 'reddit_analysis', password is nothing.
 
+Simple import "reddit_analysis.sql" and you're good to go.
+
 #### Subreddits:
 If you want data to different subreddits, just insert it into the array in <code>main.py</code>
 
@@ -44,3 +60,5 @@ If you want data to different subreddits, just insert it into the array in <code
 Currently it points at my server, hosted on bplaced. To change this, go into <code>ftp_writer.py</code>
 
 In there just configure the host and username. The next line in the code directs to the directory on the server where the files will be saved.
+
+

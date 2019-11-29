@@ -5,7 +5,6 @@ import datetime as dt
 mydb = mysql.connector.connect(
     host="127.0.0.1",
     user="root",
-    password='nbuser',
     database='reddit_analysis'
 )
 columns_dict = {'post_columns': [], 'subreddit_columns': [],
@@ -67,12 +66,17 @@ def write_subreddit_to_db(subreddit_name):
     mydb.commit()
 
 
-def write_posthistoryelement_to_db(posthistoryelement):
-    query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`, `id_post`) " \
-            "VALUES (%s, %s, %s, %s);"
-    data = (posthistoryelement['saved'], posthistoryelement['score'], posthistoryelement['num_comments'],
-            posthistoryelement['id_post'])
-    mycursor.execute(query, data)
+def write_posthistoryelement_to_db(posthistoryelements):
+    query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`, `id_post`) VALUES"
+    first = True
+    for element in posthistoryelements:
+        if not first:
+            query += ","
+        first = False
+        element = element.get_dict()
+        query += "('" + str(element['saved']) + "', " + str(element['score']) + ", " + str(element['num_comments']) + ", '" + str(element['id_post']) + "')"
+    query += ";"
+    mycursor.execute(query)
     mydb.commit()
 
 

@@ -1,11 +1,13 @@
 import datetime as dt
-import database_connection as db
+import Code.database_connection as db
+from pprint import pprint
 
 import pandas as pd
 
 global reddit
 posts = []
 subreddits = []
+subreddit_posts = {}
 
 
 def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
@@ -17,29 +19,40 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
             print('subreddit %s not in db' % subreddit_name)
             db.write_subreddit_to_db(subreddit_name)
         subreddits.append(subreddit_name)
-    for post_id in get_posts_to_be_kept_up_to_date(subreddit_instance):
+        subreddit_posts[subreddit_name] = []
+    all_post_ids = get_posts_to_be_kept_up_to_date(subreddit_instance, subreddit_name)
+    ids2 = [i if i.startswith('t3_') else f't3_{i}' for i in all_post_ids]
+    # TODO Rename post_id to submission
+    elements = []
+    for post_id in reddit.info(ids2):
         for post in posts:
-            if post_id is post.id_post:
+            if post_id.id is post.id_post:
                 break
         else:
-            create_new_post(post_id)
+            create_new_post(post_id, subreddit_name)
         for post in posts:
-            if post_id is post.id_post:
-                create_new_post_history_element(post)
+            if post_id.id is post.id_post:
+                elements.append(create_new_post_history_element(post, post_id))
+    db.write_posthistoryelement_to_db(elements)
+    print('posts updated: ' + str(len(all_post_ids)))
+    pprint(subreddit_posts)
+    print(all_post_ids)
+    pprint(posts)
 
 
-def get_posts_to_be_kept_up_to_date(subreddit_instance):
+def get_posts_to_be_kept_up_to_date(subreddit_instance, subreddit_name):
     """:returns array with id's of posts that must be updated"""
     arr_post_ids = []
-    for post in posts:
+    for post in subreddit_posts[subreddit_name]:
         timediff = (dt.datetime.now() - post.created).seconds / 3600
-        if timediff > 5:
+        if timediff > 30:
             growth = post.check_growth()
             if growth <= 2:
                 print("Post %s too old, removing it now" % post.id_post)
                 posts.remove(post)
         else:
-            arr_post_ids.append(post.id_post)
+            if post.id_post not in arr_post_ids:
+                arr_post_ids.append(post.id_post)
 
     for submission in subreddit_instance:
         for post in posts:
@@ -50,21 +63,20 @@ def get_posts_to_be_kept_up_to_date(subreddit_instance):
     return arr_post_ids
 
 
-def create_new_post(id_post):
-    submission = reddit.submission(id=id_post)
-    post = Post(submission.title, id_post, submission.url, submission.created,
+def create_new_post(submission, subreddit_name):
+    post = Post(submission.title, submission.id, submission.url, submission.created,
                 db.get_id_of_subreddit(submission.subreddit)[0])
     posts.append(post)
-    if not db.post_in_db(id_post):
+    subreddit_posts[subreddit_name].append(post)
+    if not db.post_in_db(submission.id):
         db.write_post_to_db(post.get_dict())
     return post
 
 
-def create_new_post_history_element(post):
-    submission = reddit.submission(id=post.id_post)
+def create_new_post_history_element(post, submission):
     element = PostHistoryElement(submission.score, dt.datetime.now(), submission.num_comments, post.id_post)
     post.post_history.append(element)
-    db.write_posthistoryelement_to_db(element.get_dict())
+    return element
 
 
 def load_post_from_db(id_post):
@@ -111,7 +123,8 @@ class Post:
         return post
 
     def get_panda(self):
-        pan = {'score': [], 'time_saved': [], 'id': self.id_post, 'subreddit': db.get_name_of_subreddit(self.id_subreddit)}
+        pan = {'score': [], 'time_saved': [], 'id': self.id_post,
+               'subreddit': db.get_name_of_subreddit(self.id_subreddit)}
         for element in self.post_history:
             pan['score'].append(element.score)
             d = element.time_saved.strftime("%d.%m.%Y %H:%M:%S")

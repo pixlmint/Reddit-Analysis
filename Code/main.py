@@ -3,22 +3,25 @@ from threading import Thread, Event
 
 import praw
 
-import database_connection as db
-import get_posts as ps
-import visualizer
+import Code.database_connection as db
+import Code.get_posts as ps
+import Code.visualizer
 from datetime import datetime
-import ftp_writer
-
 
 subreddits = ['dankmemes', 'askreddit']
 
 
 def get_keys():
+    print(os.getcwd())
+    if 'Code' not in os.getcwd():
+        os.chdir('./Code')
     file = open('keys.txt', 'r')
-    keys_dict = {file.readline(): file.readline().split()[0][:14],
-                 file.readline(): file.readline().split()[0][:27],
-                 file.readline(): file.readline().split()[0][:16],
-                 file.readline(): file.readline()}
+    keys_dict = {
+        file.readline(): file.readline().split()[0][:14],
+        file.readline(): file.readline().split()[0][:27],
+        file.readline(): file.readline().split()[0][:16],
+        file.readline(): file.readline()
+    }
     return keys_dict
 
 
@@ -59,9 +62,6 @@ def visualize_todays_posts():
     visualizer.visualize_multiple_posts(arr_pandas)
 
 
-visualize_todays_posts()
-
-
 def visualize_subreddit(sub, sub_filter):
     try:
         date = datetime.now()
@@ -86,12 +86,12 @@ class MyThread(Thread):
         while not self.stopped.wait(30):
             print("running thread " + str(i))
             run()
-            if int(self.time.minute) % 2 == 0:
+            if int(self.time.minute) % 20 == 0:
                 print('visualizing')
                 visualize_all()
                 self.last_saved = int(self.time.minute)
-            elif int(self.time.minute) % 20 == 0:
-                visualize_all()
+            # elif int(self.time.hour) % 2 == 0:
+            #     db_backup.backup()
             self.time = datetime.now().time()
             print('done: ' + str(self.time.hour) + ":" + str(self.time.minute))
             i = i + 1
@@ -104,6 +104,5 @@ def start_thread():
 
 
 # ftp_writer.write(keys['ftp-password\n'])
-
 
 # start_thread()

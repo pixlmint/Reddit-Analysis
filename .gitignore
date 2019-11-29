@@ -4,4 +4,6 @@ keys.txt
 Data/*
 Code/.idea/*
 Code/__pycache__/*
-Code/venv/*
+venv/*
+venv/*
+backup/*
