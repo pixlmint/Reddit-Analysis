@@ -1,6 +1,8 @@
 import mysql.connector
 import pandas as pd
 import datetime as dt
+from pprint import pprint
+from Code.get_posts import Post, PostHistoryElement
 
 mydb = mysql.connector.connect(
     host="127.0.0.1",
@@ -11,6 +13,19 @@ columns_dict = {'post_columns': [], 'subreddit_columns': [],
                 'posthistoryelement_columns': []}
 
 mycursor = mydb.cursor(buffered=True)
+
+
+def cursor_to_dict(result_cursor):
+    head = []
+    ret = []
+    for col in result_cursor.description:
+        head.append(col[0])
+    for row in result_cursor:
+        this_head = {}
+        for col in range(len(row)):
+            this_head[head[col]] = row[col]
+        ret.append(this_head)
+    return ret
 
 
 def get_column_names(table):
@@ -56,8 +71,11 @@ def write_post_to_db(post):
     query = "INSERT INTO `post` (`id_post`, `url`, `date_posted`, `id_subreddit`, `title`) " \
             "VALUES (%s, %s, %s, %s, %s)"
     data = (post['id_post'], post['url'], post['created'], post['id_subreddit'], post['title'])
-    mycursor.execute(query, data)
-    mydb.commit()
+    try:
+        mycursor.execute(query, data)
+        mydb.commit()
+    except Exception:
+        print('an error occured while writing posts to database with query' + query + " and data " + str(data))
 
 
 def write_subreddit_to_db(subreddit_name):
@@ -113,7 +131,6 @@ def cursor_has_elements():
         return True
     return False
 
-
 def get_posts_younger_than(amount_hours):
     query = "SELECT * FROM post WHERE DATE(date_posted) < DATE_SUB(CURDATE(), INTERVAL %s HOUR)" % amount_hours
     mycursor.execute(query)
@@ -131,6 +148,21 @@ def get_todays_posts():
     for x in mycursor:
         ret.append(x[0])
     return ret
+
+
+def get_posts_by_date(date):
+    query = "select * from post left join posthistoryelement p on post.id_post = p.id_post where post.date_posted <= '2019-11-30' or post.date_posted >= '2019-11-30';"
+    mycursor.execute(query)
+    posts = {}
+    post_dict = cursor_to_dict(mycursor)
+    for row in post_dict:
+        if row['id_post'] not in posts:
+            post = Post(row['title'], row['id_post'], row['url'], row['date_posted'], row['id_subreddit'])
+            posts[row['id_post']] = post
+        else:
+            post = posts[row['id_post']]
+        post.add_history_element(row['score'], row['date_saved'], row['num_comms'])
+    return posts
 
 
 def get_posthistoryelements(id_post):

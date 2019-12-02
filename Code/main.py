@@ -5,7 +5,7 @@ import praw
 
 import Code.database_connection as db
 import Code.get_posts as ps
-import Code.visualizer
+import Code.visualizer as visualizer
 from datetime import datetime
 
 subreddits = ['dankmemes', 'askreddit']
@@ -37,7 +37,10 @@ def run():
 
 def visualize_post(post=None, id_post=None):
     if post:
-        visualizer.create_plot(post.get_panda(), 'new')
+        try:
+            visualizer.create_plot(post.get_panda(), 'new')
+        except Exception:
+            print('unable to visualize a post')
     elif id_post:
         ps.load_post_history_element_from_db(id_post=id_post)
         visualizer.create_plot(ps.load_post_history_element_from_db(id_post=id_post), 'new')
@@ -53,13 +56,10 @@ def visualize_array(arr):
 
 
 def visualize_todays_posts():
-    ps.posts = []
-    arr_pandas = []
-    for post_id in db.get_todays_posts():
-        ps.load_post_history_element_from_db(id_post=post_id)
-        post = ps.load_post_from_db(post_id)
-        arr_pandas.append(post.get_panda())
-    visualizer.visualize_multiple_posts(arr_pandas)
+    posts = db.get_posts_by_date(datetime.now())
+    for post in posts:
+        visualize_post(posts[post])
+    print('visualized posts')
 
 
 def visualize_subreddit(sub, sub_filter):
@@ -82,24 +82,20 @@ class MyThread(Thread):
         self.stopped = event
 
     def run(self):
-        i = 0
+        thread_count = 1
         while not self.stopped.wait(30):
-            print("running thread " + str(i))
+            print("running thread " + str(thread_count))
             run()
-            if int(self.time.minute) % 20 == 0:
-                print('visualizing')
-                visualize_all()
-                self.last_saved = int(self.time.minute)
-            # elif int(self.time.hour) % 2 == 0:
-            #     db_backup.backup()
             self.time = datetime.now().time()
-            print('done: ' + str(self.time.hour) + ":" + str(self.time.minute))
-            i = i + 1
+            print('done: ' + self.time.strftime('%H:%M'))
+            thread_count += 1
+
+
+stop_thread = Event()
 
 
 def start_thread():
-    stop_flag = Event()
-    thread = MyThread(stop_flag)
+    thread = MyThread(stop_thread)
     thread.start()
 
 

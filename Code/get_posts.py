@@ -20,24 +20,24 @@ def get_data(reddit_instance, subreddit_instance, subreddit_name, sub_filter):
             db.write_subreddit_to_db(subreddit_name)
         subreddits.append(subreddit_name)
         subreddit_posts[subreddit_name] = []
-    all_post_ids = get_posts_to_be_kept_up_to_date(subreddit_instance, subreddit_name)
+    try:
+        all_post_ids = get_posts_to_be_kept_up_to_date(subreddit_instance, subreddit_name)
+    except Exception:
+        return None
     ids2 = [i if i.startswith('t3_') else f't3_{i}' for i in all_post_ids]
-    # TODO Rename post_id to submission
     elements = []
-    for post_id in reddit.info(ids2):
-        for post in posts:
-            if post_id.id is post.id_post:
+    for submission in reddit.info(ids2):
+        for post in subreddit_posts[subreddit_name]:
+            if submission.id is post.id_post:
                 break
         else:
-            create_new_post(post_id, subreddit_name)
+            create_new_post(submission, subreddit_name)
         for post in posts:
-            if post_id.id is post.id_post:
-                elements.append(create_new_post_history_element(post, post_id))
+            if submission.id is post.id_post:
+                elements.append(create_new_post_history_element(post, submission))
     db.write_posthistoryelement_to_db(elements)
     print('posts updated: ' + str(len(all_post_ids)))
-    pprint(subreddit_posts)
     print(all_post_ids)
-    pprint(posts)
 
 
 def get_posts_to_be_kept_up_to_date(subreddit_instance, subreddit_name):
