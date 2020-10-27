@@ -16,7 +16,17 @@ services:
         environment:
             MYSQL_ROOT_PASSOWRD: root
         volumes:
-            - ./:/app
+            - ./Code:/app/Code
+    web:
+        build:
+            dockerfile: Web.Dockerfile
+            context: .
+        ports:
+            - "86:80"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+        volumes:
+            - ./Web:/var/www/html
 
 volumes:
     reddit-analysis:
