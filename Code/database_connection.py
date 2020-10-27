@@ -2,11 +2,13 @@ import mysql.connector
 import pandas as pd
 import datetime as dt
 from pprint import pprint
+import os
 from Code.get_posts import Post, PostHistoryElement
 
 mydb = mysql.connector.connect(
-    host="127.0.0.1",
+    host="db",
     user="root",
+    password="root",
     database='reddit_analysis'
 )
 columns_dict = {'post_columns': [], 'subreddit_columns': [],

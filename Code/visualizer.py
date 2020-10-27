@@ -4,7 +4,6 @@ import sys
 
 import plotly.graph_objs as go
 import plotly.io as pio
-import chart_studio.plotly as py
 
 
 def create_plot(data, sub_filter):
