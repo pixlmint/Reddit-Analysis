@@ -1,7 +1,7 @@
 import mysql.connector
 import pandas as pd
 import datetime as dt
-from Code.get_posts import Post, PostHistoryElement
+from Code.Post import Post
 from Code.config import db
 
 mydb = mysql.connector.connect(

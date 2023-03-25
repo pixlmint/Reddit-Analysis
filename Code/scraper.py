@@ -1,6 +1,7 @@
 import datetime as dt
 import Code.database_connection as db
-import pandas as pd
+from Code.Post import Post
+from Code.PostHistoryElement import PostHistoryElement
 
 global reddit
 posts = []
@@ -97,66 +98,3 @@ def load_post_history_element_from_db(id_post=None, post=None):
         post.add_history_element(elements['score'][i], elements['date_saved'][i], elements['num_comms'][i])
     panda = post.get_panda()
     return panda
-
-
-class Post:
-    def __init__(self, title, id_post, url, created, id_subreddit):
-        self.title = title
-        self.id_post = id_post
-        self.url = url
-        try:
-            self.created = dt.datetime.fromtimestamp(created)
-        except:
-            self.created = created
-        self.id_subreddit = id_subreddit
-        self.post_history = []
-
-    def get_dict(self):
-        post = {'title': self.title,
-                'url': self.url,
-                'id_post': self.id_post,
-                'created': self.created,
-                'id_subreddit': self.id_subreddit
-                }
-        return post
-
-    def get_panda(self):
-        pan = {'score': [], 'time_saved': [], 'id': self.id_post,
-               'subreddit': db.get_name_of_subreddit(self.id_subreddit)}
-        for element in self.post_history:
-            pan['score'].append(element.score)
-            d = element.time_saved.strftime("%d.%m.%Y %H:%M:%S")
-            pan['time_saved'].append(d)
-        panda = pd.DataFrame(pan)
-        return panda
-
-    def add_history_element(self, score, time_saved, num_comms):
-        self.post_history.append(PostHistoryElement(score, time_saved, num_comms, self.id_post))
-
-    def check_growth(self):
-        growth = 0
-        for element in self.post_history:
-            growth += element.score
-        return growth
-
-
-class PostHistoryElement:
-    def __str__(self):
-        return 'score: ' + str(self.score) + '\tNumber of comments: ' + str(self.comms_num) + \
-               '\ttime saved: ' + str(self.time_saved)
-
-    def __init__(self, score, time_saved, num_comms, id_post):
-        self.score = score
-        self.time_saved = time_saved
-        self.comms_num = num_comms
-        self.id_post = id_post
-
-    def get_element(self):
-        return [self.score, self.time_saved, self.comms_num]
-
-    def get_dict(self):
-        ret = {'score': self.score,
-               'saved': self.time_saved,
-               'num_comments': self.comms_num,
-               'id_post': self.id_post}
-        return ret

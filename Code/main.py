@@ -4,7 +4,7 @@ from threading import Thread, Event
 import praw
 
 import Code.database_connection as db
-import Code.get_posts as ps
+import Code.scraper as ps
 import Code.visualizer as visualizer
 from datetime import datetime
 from Code.config import reddit as reddit_keys
@@ -35,10 +35,6 @@ def visualize_post(post=None, id_post=None):
 def visualize_all():
     for post in ps.posts:
         visualize_post(post=post)
-
-
-def visualize_array(arr):
-    pass
 
 
 def visualize_todays_posts():
