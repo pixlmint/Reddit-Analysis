@@ -1,6 +1,5 @@
 import os
 import datetime as dt
-import sys
 
 import plotly.graph_objs as go
 import plotly.io as pio
@@ -27,71 +26,24 @@ def visualize_multiple_posts(data):
                 name=str(dataset['id'])
             )
         )
-    # save_image(fig, data['id'][0], data['subreddit'][0], '')
-    url = py.plot(fig, filename='test')
+    save_image(fig, data['id'][0], data['subreddit'][0], '')
+    # url = py.plot(fig, filename='test')
 
 
 def save_image(fig, id, sub, sub_filter):
-    # TODO: fuck this, instead use directory paths
     date = dt.datetime.now().date()
-    if not os.getcwd().split(os.sep)[-1] == str(id):
-        change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
+    target_path = generate_path(subreddit=sub, id_post=id, date=str(date.month) + "." + str(date.day))
     try:
-        pio.write_image(fig, str(id) + ".png")
+        pio.write_image(fig, os.path.join(target_path, "some_data.png"))
     except PermissionError:
         print('unable to write to file')
 
 
-def convert_to_binarydata(filename):
-    with open(filename, 'rb') as file:
-        binary_data = file.read()
-    return binary_data
+# Reddit-Analysis/Data/dankmemes/2022-01-01/id_post
+def generate_path(subreddit, id_post, date):
+    path_str = os.path.join(os.getcwd(), "Data", subreddit, str(date), str(id_post))
 
+    if not os.path.isdir(path_str):
+        os.makedirs(path_str, exist_ok=True)
 
-def save_to_db(id):
-    print('trying to write image to db')
-    try:
-        # db.write_graph(id, convert_to_binarydata(id + '.png'))
-        print('done writing image to db')
-    except Exception:
-        None
-
-
-def change_directory(sub=None, id=None, date=None, filter=None):
-    id = str(id)
-    dirs = os.getcwd().split(os.sep)
-    if sub is not None:
-        if dirs[-1] == "Code" or dirs[-1] == "Data":
-            os.chdir("../Data")
-            try:
-                os.mkdir(str(date))
-                os.chdir(str(date))
-            except FileExistsError:
-                os.chdir(str(date))
-            change_directory(sub=sub, id=id, date=date, filter=filter)
-        elif dirs[-1] == str(date):
-            try:
-                os.mkdir(filter)
-                os.chdir(filter)
-            except FileExistsError:
-                os.chdir(filter)
-            change_directory(sub=sub, id=id, date=date, filter=filter)
-        elif dirs[-1] == filter:
-            try:
-                os.mkdir(sub)
-                os.chdir(sub)
-            except FileExistsError:
-                os.chdir(sub)
-            change_directory(sub=sub, id=id, date=date, filter=filter)
-        elif dirs[-1] == sub:
-            try:
-                os.mkdir(id)
-                os.chdir(id)
-            except FileExistsError:
-                os.chdir(id)
-            return
-        elif dirs[-1] == id:
-            return
-        else:
-            os.chdir(".." + os.sep)
-            change_directory(sub=sub, id=id, date=date, filter=filter)
+    return path_str
