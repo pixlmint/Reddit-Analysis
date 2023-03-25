@@ -86,14 +86,14 @@ def write_subreddit_to_db(subreddit_name):
 
 
 def write_posthistoryelement_to_db(posthistoryelements):
-    query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`, `id_post`) VALUES"
+    query = "INSERT INTO `posthistoryelement` (`date_saved`, `score`, `num_comms`) VALUES"
     first = True
     for element in posthistoryelements:
         if not first:
             query += ","
         first = False
         element = element.get_dict()
-        query += "('" + str(element['saved']) + "', " + str(element['score']) + ", " + str(element['num_comments']) + ", '" + str(element['id_post']) + "')"
+        query += "('" + str(element['saved']) + "', " + str(element['score']) + ", " + str(element['num_comments']) + ")"
     query += ";"
     mycursor.execute(query)
     mydb.commit()

@@ -12,7 +12,6 @@ CREATE TABLE if not exists `post` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE if not exists `posthistoryelement` (
-  `id_post` varchar(11) NOT NULL,
   `id` int(11) NOT NULL,
   `date_saved` datetime NOT NULL,
   `score` int(11) NOT NULL,
@@ -38,11 +37,11 @@ ALTER TABLE `subreddit`
   ADD PRIMARY KEY (`id`);
 
 ALTER TABLE `post`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4442;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 ALTER TABLE `posthistoryelement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=272920;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 ALTER TABLE `subreddit`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 COMMIT;
