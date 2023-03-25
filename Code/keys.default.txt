@@ -1,8 +1,0 @@
-personal
-{your reddit api personal key}
-secret
-{your reddit api secret key}
-password
-{the password for your reddit account}
-ftp-password
-{optional}

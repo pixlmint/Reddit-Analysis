@@ -7,27 +7,13 @@ import Code.database_connection as db
 import Code.get_posts as ps
 import Code.visualizer as visualizer
 from datetime import datetime
+from Code.config import reddit as reddit_keys
 
 subreddits = ['dankmemes', 'askreddit']
 
 
-def get_keys():
-    print(os.getcwd())
-    if 'Code' not in os.getcwd():
-        os.chdir('./Code')
-    file = open('keys.txt', 'r')
-    keys_dict = {
-        file.readline(): file.readline().split()[0][:14],
-        file.readline(): file.readline().split()[0][:27],
-        file.readline(): file.readline().split()[0][:16],
-        file.readline(): file.readline()
-    }
-    return keys_dict
-
-
-keys = get_keys()
-reddit = praw.Reddit(client_id=keys['personal\n'], client_secret=keys['secret\n'], user_agent='Analytics',
-                     username='Kristophersson', password=keys['password\n'])
+reddit = praw.Reddit(client_id=reddit_keys['personal'], client_secret=reddit_keys['secret'], user_agent='Analytics',
+                     username=reddit_keys['username'], password=reddit_keys['password'])
 
 
 def run():

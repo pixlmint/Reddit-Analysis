@@ -1,7 +1,5 @@
 import datetime as dt
 import Code.database_connection as db
-from pprint import pprint
-
 import pandas as pd
 
 global reddit

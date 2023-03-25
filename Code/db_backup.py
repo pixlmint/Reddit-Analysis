@@ -1,32 +1,15 @@
-#!/usr/bin/python
-
-###########################################################
-#
-# This python script is used for mysql database backup
-# using mysqldump and tar utility.
-#
-# Written by : Rahul Kumar
-# Website: http://tecadmin.net
-# Created date: Dec 03, 2013
-# Last modified: Aug 17, 2018
-# Tested with : Python 2.7.15 & Python 3.5
-# Script Revision: 1.4
-#
-##########################################################
-
-# Import required python libraries
-
 import os
 import time
 import pipes
+from Code.config import db as database_config
 
 # MySQL database details to which backup to be done. Make sure below user having enough privileges to take databases backup.
 # To take multiple databases backup, create any file like /backup/dbnames.txt and put databases names one on each line and assigned to DB_NAME variable.
 
-DB_HOST = 'localhost'
-DB_USER = 'root'
-DB_USER_PASSWORD = ''
-DB_NAME = 'reddit_analysis'
+DB_HOST = database_config['host']
+DB_USER = database_config['user']
+DB_USER_PASSWORD = database_config['password']
+DB_NAME = database_config['database']
 BACKUP_PATH = os.getcwd() + '/backup/db-backup'
 
 

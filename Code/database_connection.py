@@ -1,15 +1,14 @@
 import mysql.connector
 import pandas as pd
 import datetime as dt
-from pprint import pprint
-import os
 from Code.get_posts import Post, PostHistoryElement
+from Code.config import db
 
 mydb = mysql.connector.connect(
-    host="db",
-    user="root",
-    password="root",
-    database='reddit_analysis'
+    host=db['host'],
+    user=db['user'],
+    password=db['password'],
+    database=db['database']
 )
 columns_dict = {'post_columns': [], 'subreddit_columns': [],
                 'posthistoryelement_columns': []}

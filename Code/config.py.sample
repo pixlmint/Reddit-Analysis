@@ -1,0 +1,13 @@
+db = {
+    "host": "host",
+    "user": "user",
+    "password": "password",
+    "database": "reddit_analysis",
+}
+
+reddit = {
+    "personal": "personal",
+    "secret": "secret",
+    "password": "password",
+    "username": "username",
+}

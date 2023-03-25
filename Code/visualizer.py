@@ -32,6 +32,7 @@ def visualize_multiple_posts(data):
 
 
 def save_image(fig, id, sub, sub_filter):
+    # TODO: fuck this, instead use directory paths
     date = dt.datetime.now().date()
     if not os.getcwd().split(os.sep)[-1] == str(id):
         change_directory(sub=sub, id=str(id), date=str(date.month) + "." + str(date.day), filter=sub_filter)
